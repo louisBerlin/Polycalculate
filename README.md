@@ -4,8 +4,8 @@ This object calculates the polynomial, using basic mathematical expressions.
 Example :
 
 ```scala
-printf(Polycalcule.bbb*)
-// answer :
+    println(Polycalculate.solves_a_polynome("(((2+3)*2)/(2+3))^2"))
+// answer : 4.0
 ```
 
 ```scala
