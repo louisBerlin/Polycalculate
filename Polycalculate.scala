@@ -1,6 +1,20 @@
-package com.cabond.tools
+object Main {
+  def main(args: Array[String]): Unit = {
+    println(Polycalculate.solves_a_polynome("(((2+3)*2)/(2+3))^2"))
 
-import com.cabond.models.{ Device, Device2durchlauf, Device2value, Durchlauf, ServerMessage }
+    println(Polycalculate.solves_a_polynome("cos90"))
+
+
+
+
+
+
+
+  }
+}
+
+
+
 
 import scala.collection.mutable.ListBuffer
 import scala.util.control.Breaks.{ break, breakable }
@@ -14,28 +28,13 @@ object Polycalculate {
   //***********************************************************************************************
   //  MAIN FONCTION : solves a polynomial or equation from a string
   //***********************************************************************************************
-  def solves_a_polynome(polynomial: String, durchlauf: Durchlauf): Double = {
+  def solves_a_polynome(polynomial: String): Double = {
 
     var polynome = polynomial
 
     // 1. I delete all empty spaces.
     polynome = polynome.replaceAll("\\s", "")
 
-    // d,D    Durchhärtung
-    //  case "d" => calculus_list_add(index) =   ---- > get into the database
-    //  case "D" => calculus_list_add(index) =   ---- > get into the database
-
-    // f,F    Handfestigkeit
-    //  case "f" => calculus_list_add(index) =   ---- > get into the database
-    //  case "F" => calculus_list_add(index) =   ---- > get into the database
-
-    // h,H    Aushärtezeit
-    //  case "h" => calculus_list_add(index) =   ---- > get into the database
-    //  case "H" => calculus_list_add(index) =   ---- > get into the database
-
-    // l,L    Ablüftzeit
-    //  case "l" => calculus_list_add(index) =   ---- > get into the database
-    //  case "L" => calculus_list_add(index) =   ---- > get into the database
 
     // 2. I add an empty space between all the expressions
     polynome = polynome.replaceAll("\\(", " ( ")
@@ -104,12 +103,12 @@ object Polycalculate {
     //4. I resolved what is in the brackets.
     // println(" ")
     // println("the polynomial  : " + list.mkString(" "))
-    dissociate_parentheses_and_calculate(list, durchlauf)
+    dissociate_parentheses_and_calculate(list)
 
     //5. Then the rest.
     // println(" ")
     // println("the final polynomial without the brackets  : " + list.mkString(" "))
-    calculate(list, durchlauf)
+    calculate(list)
     // And I return the last remaining value which must be the answer .
     // println(" ")
 
@@ -123,7 +122,7 @@ object Polycalculate {
   //***********************************************************************************************
   // This function will resolve the contents of the parentheses of the polynomial.
   //***********************************************************************************************
-  private def dissociate_parentheses_and_calculate(list_first: ListBuffer[String], durchlauf: Durchlauf): ListBuffer[String] = {
+  private def dissociate_parentheses_and_calculate(list_first: ListBuffer[String]): ListBuffer[String] = {
 
     var new_list: ListBuffer[String] = ListBuffer.empty
     var nb = 0
@@ -148,10 +147,10 @@ object Polycalculate {
             index_stop = index
 
             if (new_list.contains("(")) //  restart process
-              dissociate_parentheses_and_calculate(new_list, durchlauf)
+              dissociate_parentheses_and_calculate(new_list)
 
             //println("calciulus : "+calculus(new_list).toString())
-            list_first(index_start) = calculate(new_list, durchlauf).head.toString()
+            list_first(index_start) = calculate(new_list).head.toString()
 
             var a: Int = 0
             for (a <- (index_start + 1) to index_stop) {
@@ -164,7 +163,7 @@ object Polycalculate {
             //
             //println(" ")
 
-            dissociate_parentheses_and_calculate(list_first, durchlauf)
+            dissociate_parentheses_and_calculate(list_first)
             break()
 
           }
@@ -204,10 +203,9 @@ object Polycalculate {
   // Solves a polynomial/equation without parentheses.
   // It uses the mathematical expressions below (in the next fonctions).
   //***********************************************************************************************
-  private def calculate(calculus_list: ListBuffer[String], durchlauf: Durchlauf): ListBuffer[String] = {
+  private def calculate(calculus_list: ListBuffer[String]): ListBuffer[String] = {
 
-    if (calculus_list.contains("t") || calculus_list.contains("T") || calculus_list.contains("r") || calculus_list.contains("R"))
-      sensors(calculus_list, durchlauf)
+
 
     if (calculus_list.contains("cos") || calculus_list.contains("COS"))
       cos(calculus_list)
@@ -702,62 +700,7 @@ object Polycalculate {
     calculus_list_add
   }
 
-  // External input (sensors)
 
-  private def sensors(calculus_list_add: ListBuffer[String], durchlauf: Durchlauf): ListBuffer[String] = {
-    //println("give the corresponding value of the sensor : " + calculus_list_add.mkString(" "))
-
-    var index = -1
-    for (l: String <- calculus_list_add) {
-
-      index = index + 1
-
-      // println("Chaine: " + l)
-
-      // temperature sensor
-      if (l.equals("T") || l.equals("t")) { //  .2  get device id
-
-        val device_id = Device2durchlauf.get_from_durchlauf_id_and_unit(durchlauf, "T")
-
-        if (device_id == 0) ServerMessage.get_Message(1301) //  Device not found.
-
-        //  .3  check if online
-
-        if (Device.get_Device_von_id(device_id).status.equals("online")) ServerMessage.get_Message(1302) //  Device ist offline
-
-        //  .4  get value from device
-
-        val device_last_value: Double = Device2value.get_last_value_from_device_id(device_id, "T").value.get.asInstanceOf[Double]
-
-        // println("Poly-device T value : " + device_last_value)
-
-        calculus_list_add(index) = device_last_value.toString
-
-      } // humidity sensor
-      else if (l.equals("R") || l.equals("r")) { //  .2  get device id
-
-        val device_id = Device2durchlauf.get_from_durchlauf_id_and_unit(durchlauf, "R")
-
-        if (device_id == 0) ServerMessage.get_Message(1301) //  Device not found.
-
-        //  .3  check if online
-
-        if (Device.get_Device_von_id(device_id).status.equals("online")) ServerMessage.get_Message(1302) //  Device ist offline
-
-        //  .4  get value from device
-
-        val device_last_value: Double = Device2value.get_last_value_from_device_id(device_id, "R").value.get.asInstanceOf[Double]
-
-        // println("Poly-device R value : " + device_last_value)
-
-        calculus_list_add(index) = device_last_value.toString
-
-      }
-
-    }
-
-    calculus_list_add
-  }
 
   // Mathematical constants
 
@@ -781,30 +724,6 @@ object Polycalculate {
           case "E"  => calculus_list_add(index) = Math.E.toString
           case "e"  => calculus_list_add(index) = Math.E.toString
 
-          // todo get constants
-          // o,O    offene Zeit
-          //  case "O" => calculus_list_add(index) =   ---- > get into the database
-          //  case "o" => calculus_list_add(index) =   ---- > get into the database
-
-          // b,B    Hautbildezeit
-          //  case "B" => calculus_list_add(index) =   ---- > get into the database
-          //  case "b" => calculus_list_add(index) =   ---- > get into the database
-
-          // d,D    Durchhärtung
-          //  case "d" => calculus_list_add(index) =   ---- > get into the database
-          //  case "D" => calculus_list_add(index) =   ---- > get into the database
-
-          // f,F    Handfestigkeit
-          //  case "f" => calculus_list_add(index) =   ---- > get into the database
-          //  case "F" => calculus_list_add(index) =   ---- > get into the database
-
-          // h,H    Aushärtezeit
-          //  case "h" => calculus_list_add(index) =   ---- > get into the database
-          //  case "H" => calculus_list_add(index) =   ---- > get into the database
-
-          // l,L    Ablüftzeit
-          //  case "l" => calculus_list_add(index) =   ---- > get into the database
-          //  case "L" => calculus_list_add(index) =   ---- > get into the database
 
         }
 
